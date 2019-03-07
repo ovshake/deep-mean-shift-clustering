@@ -10,7 +10,7 @@ class Mean_Shift(torch.nn.Module):
 
     def mean_shift_once(self, X):
         S = torch.mm(X.t(), X)
-        K = torch.exp(S / (self.delta * self.delta))
+        K = torch.exp(self.delta * self.delta * S)
         
         N = list(X.size())[1]
         d = torch.mm(K.t(), torch.ones(N, 1).cuda())
@@ -24,7 +24,12 @@ class Mean_Shift(torch.nn.Module):
         
         P = ((1-self.eta) * eye) + (self.eta * torch.mm(K, D_inv))
         
-        return torch.mm(X, P)
+        new_X = torch.mm(X, P)
+        
+        norm = new_X.norm(p=2, dim=0, keepdim=True).detach()
+        new_norm_X = new_X.div(norm.expand_as(new_X))
+        
+        return new_norm_X
     
     def forward(self, z):
         # z dims: z_len x batch_size
@@ -45,8 +50,8 @@ if __name__ == '__main__':
     eta = 1
     ms_iter = 3
     
-    z = torch.randn(z_len, batch_size)
-    print(z.size())
+    z = torch.randn(batch_size, z_len)
+    print('z size', z.size())
     
     use_gpu = torch.cuda.is_available()
     
@@ -55,5 +60,6 @@ if __name__ == '__main__':
     
     mean_shift = Mean_Shift(delta, eta, ms_iter, use_gpu)
     
-    trajects = mean_shift(z)
-    print(trajects.size())
+    trajects = mean_shift(z.t())
+    print('trajects size', trajects.size())
+    print('embed unit norm', trajects[0, 0, :].norm(p=2))
