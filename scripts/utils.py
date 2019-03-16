@@ -7,9 +7,17 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from PIL import Image
+import configparser
 
 class Utils():
 
+    def load_config(self, config_folder):
+        
+        config = configparser.ConfigParser()
+        config.read(config_folder + 'config.ini')
+        
+        return config
+        
     def load_data(self, data_folder, train_batch_size, test_batch_size):
         
         # trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (1.0,))])
@@ -75,14 +83,20 @@ class Utils():
 
 if __name__ == '__main__':
     
+    util = Utils()
+
+    load_config = util.load_config
+    load_data = util.load_data
+    plot_regen = util.plot_regen
+
+    config_folder = '/home/ankitas/btp_mean_shift/data/'
+
+    config = load_config(config_folder)
+    print(config.sections())
+
     train_batch_size = 216
     test_batch_size = 216
     data_folder = '~/btp_mean_shift/data/mnist/'
-
-    util = Utils()
-
-    load_data = util.load_data
-    plot_regen = util.plot_regen
 
     train_loader, test_loader = load_data(data_folder, train_batch_size, test_batch_size)
     print('Train Batches', len(train_loader))
@@ -103,5 +117,3 @@ if __name__ == '__main__':
     label = 'test'
 
     plot_regen(encoder, decoder, test_loader, num_im, save_folder, label, use_gpu)
-
-
