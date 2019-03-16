@@ -8,7 +8,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from PIL import Image
 
-class utils():
+class Utils():
 
     def load_data(self, data_folder, train_batch_size, test_batch_size):
         
@@ -30,7 +30,7 @@ class utils():
 
         return train_loader, test_loader
 
-    def plot_regen(self, model, test_loader, num_im, save_folder, label, use_gpu):
+    def plot_regen(self, encoder, decoder, test_loader, num_im, save_folder, label, use_gpu):
 
         for batch_idx, (x, target) in enumerate(test_loader):
 
@@ -53,7 +53,9 @@ class utils():
         if use_gpu:
             data = data.cuda() 
         
-        out, embed = model(data)
+        z, ind1, ind2 = encoder(data)
+        out = decoder(z, ind1, ind2)
+
         if use_gpu:
             out = out.cpu()
 
@@ -77,7 +79,7 @@ if __name__ == '__main__':
     test_batch_size = 216
     data_folder = '~/btp_mean_shift/data/mnist/'
 
-    util = utils()
+    util = Utils()
 
     load_data = util.load_data
     plot_regen = util.plot_regen
@@ -86,10 +88,13 @@ if __name__ == '__main__':
     print('Train Batches', len(train_loader))
     print('Test Batches', len(test_loader))
 
-    from auto_encoder import AE as AE
+    from encoder import Encoder as Encoder
+    from decoder import Decoder as Decoder
 
     z_len = 64
-    model = AE(z_len)
+    input_channels = 1
+    encoder = Encoder(input_channels, z_len)
+    decoder = Decoder(input_channels, z_len)
 
     num_im = 4
     use_gpu = False
@@ -97,6 +102,6 @@ if __name__ == '__main__':
     save_folder = '/home/ankitas/btp_mean_shift/save/test/'
     label = 'test'
 
-    plot_regen(model, test_loader, num_im, save_folder, label, use_gpu)
+    plot_regen(encoder, decoder, test_loader, num_im, save_folder, label, use_gpu)
 
 
